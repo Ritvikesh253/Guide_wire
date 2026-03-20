@@ -496,18 +496,3 @@ Most insurance tech is process automation — you still file a claim, a queue st
 - Zone proximity to fraud is never sufficient grounds for rejection
 
 ---
-
-## Team
-
-Built for **[Hackathon Name]** · [Date]
-
-| Name | Role |
-|---|---|
-| [Name] | Backend — Java Spring Boot |
-| [Name] | Mobile App — React Native |
-| [Name] | ML / Fraud Engine — Python |
-| [Name] | System Design / Product |
-
----
-
-*GigShield — because the gig economy runs on trust, and trust runs on money showing up when it's supposed to.*
