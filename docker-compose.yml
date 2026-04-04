@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: payassure-db
+    environment:
+      MYSQL_ROOT_PASSWORD: extinction@7
+      MYSQL_DATABASE: payassure
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-setup-enhanced.sql:/docker-entrypoint-initdb.d/schema.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: payassure-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_USERNAME: root
+      DB_PASSWORD: extinction@7
+      DB_URL: jdbc:mysql://mysql:3306/payassure
+      SETU_CLIENT_ID: ${SETU_CLIENT_ID}
+      SETU_CLIENT_SECRET: ${SETU_CLIENT_SECRET}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ml-service:
+    build:
+      context: ./backend/ml-service
+      dockerfile: Dockerfile
+    container_name: payassure-ml
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: production
+
+  mock-disruption-api:
+    build:
+      context: ./backend/mock-disruption-api
+      dockerfile: Dockerfile
+    container_name: payassure-mock-api
+    ports:
+      - "8090:8090"
+    environment:
+      FLASK_ENV: production
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: payassure-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8080/api
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+
+networks:
+  default:
+    name: payassure-network

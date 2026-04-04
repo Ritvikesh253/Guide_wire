@@ -1,0 +1,105 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: payassure
+
+  # ── MySQL Database (Docker MySQL Service) ─────────────────────────────────
+  datasource:
+    url: jdbc:mysql://mysql:3306/payassure?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:extinction@7}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+
+  jpa:
+    database-platform: org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect
+    hibernate:
+      ddl-auto: validate        # validate on startup (schema created by mysql-setup-enhanced.sql)
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect
+        generate_statistics: false
+
+# ── PayAssure Config (Docker Environment) ────────────────────────────────────
+payassure:
+
+  jwt:
+    secret: ${JWT_SECRET:payassure-super-secret-key-minimum-32-chars-change-in-prod-2024}
+    expiry-ms: ${JWT_EXPIRY:86400000}        # 24 hours
+
+  # ── Setu Aadhaar API (UIDAI sandbox) ─────────────────────────────────────
+  setu:
+    base-url: https://dg-sandbox.setu.co
+    client-id: ${AADHAAR_API_KEY:demo-key}
+    client-secret: ${AADHAAR_API_SECRET:demo-secret}
+
+  # ── Razorpay API ─────────────────────────────────────────────────────────
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_demo}
+    key-secret: ${RAZORPAY_SECRET_KEY:demo_secret}
+
+  # ── Feature 2: ML-Driven Premium Calculation ────────────────────────────
+  openweather:
+    api-key: ${OPENWEATHER_API_KEY:demo-key}
+    base-url: https://api.openweathermap.org
+  
+  openelevation:
+    base-url: https://api.open-elevation.com
+
+  # ── Feature 3: Parametric Automation ────────────────────────────────────
+  disruption:
+    polling-interval-seconds: 60
+    mock-api-url: ${DISRUPTION_MOCK_API_URL:http://mock-api:8090/api/disruptionEvents}
+
+  # ── Feature 4: Instant Payouts ─────────────────────────────────────────
+  payouts:
+    provider: razorpayX
+    razorpayx:
+      account-number: ${RAZORPAYX_ACCOUNT_NUMBER:2121021200061746}
+      account-username: ${RAZORPAYX_USERNAME:default}
+      account-password: ${RAZORPAYX_PASSWORD:default}
+    default-claim-amount: 500
+    settlement-mode: UPI
+
+  # ── Feature 5: Aadhaar ID Matching & Real Selfie Validation ─────────────
+  face-matching:
+    provider: ${FACE_PROVIDER:mock}
+    confidence-threshold: 0.85
+    max-retries: 3
+    mock-mode: true
+    mock-confidence: 0.95
+    
+    # Local Python ML Service (Docker)
+    python:
+      service-url: http://ml-service:5000
+      timeout-seconds: 10
+  
+  ocr:
+    provider: ${OCR_PROVIDER:mock}
+    mock-mode: true
+    aadhaar-pattern: ^\d{12}$
+    name-similarity-threshold: 0.85
+
+  # ── Feature 1: Zone Selection & Geospatial ────────────────────────────
+  zones:
+    default-city: Chennai
+    default-center-lat: 13.0827
+    default-center-lon: 80.2707
+    map-zoom-default: 11
+
+logging:
+  level:
+    root: INFO
+    com.payassure: DEBUG
+    com.payassure.service.ParametricAutomationService: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
